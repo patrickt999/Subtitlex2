@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WebSRT</title>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      color: #fff;
+      font-family: sans-serif;
+      text-align: center;
+    }
+    #drop-zone {
+      border: 2px dashed #444;
+      padding: 30px;
+      margin: 20px;
+      color: #888;
+    }
+    video {
+      width: 80%;
+      margin-top: 20px;
+      background: #000;
+    }
+    #video-container {
+      position: relative;
+      display: inline-block;
+    }
+    .caption {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      font-size: 1.5em;
+      color: white;
+      text-shadow: 2px 2px 4px #000;
+      pointer-events: none;
+    }
+    #caption1 { bottom: 120px; }
+    #caption2 { bottom: 80px; }
+    #controls {
+      margin: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      background: #222;
+      color: white;
+      border: 1px solid #555;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #444;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="drop-zone">Drop a video file and 2 .srt files</div>
+
+  <div id="controls">
+    <button id="toggleCaptionsBtn">Toggle Captions</button>
+  </div>
+
+  <div id="video-container">
+    <video id="video" controls autoplay></video>
+    <div id="caption1" class="caption"></div>
+    <div id="caption2" class="caption"></div>
+  </div>
+
+  <script>
+    const video = document.getElementById("video");
+    const caption1 = document.getElementById("caption1");
+    const caption2 = document.getElementById("caption2");
+    const dropZone = document.getElementById("drop-zone");
+    const toggleBtn = document.getElementById("toggleCaptionsBtn");
+
+    let captions = [[], []];
+    let captionsVisible = true;
+
+    dropZone.addEventListener("dragover", e => {
+      e.preventDefault();
+    });
+
+    dropZone.addEventListener("drop", async e => {
+      e.preventDefault();
+      const files = [...e.dataTransfer.files];
+
+      const videoFile = files.find(f => f.type.startsWith("video/"));
+      const srtFiles = files.filter(f => f.name.endsWith(".srt"));
+
+      if (!videoFile) {
+        alert("Drop a valid video file (.mp4, .mkv, etc.)");
+        return;
+      }
+
+      if (srtFiles.length < 2) {
+        alert("Drop at least 2 .srt files.");
+        return;
+      }
+
+      video.src = URL.createObjectURL(videoFile);
+      video.load();
+      video.play();
+
+      const parsed = await Promise.all(srtFiles.slice(0, 2).map(async (file) => {
+        const text = await file.text();
+        return parseSRT(text);
+      }));
+
+      captions = parsed;
+    });
+
+    function parseSRT(data) {
+      return data.split(/\r?\n\r?\n/).map(block => {
+        const lines = block.split(/\r?\n/);
+        const timeLine = lines.find(l => l.includes('-->'));
+        if (!timeLine) return null;
+        const [start, end] = timeLine.split(' --> ').map(parseTime);
+        const text = lines.slice(2).join("\n");
+        return { start, end, text };
+      }).filter(Boolean);
+    }
+
+    function parseTime(timeStr) {
+      const [h, m, s] = timeStr.split(':');
+      const [sec, ms] = s.split(',');
+      return (+h) * 3600 + (+m) * 60 + (+sec) + (+ms) / 1000;
+    }
+
+    function getCaption(track, time) {
+      const entry = track.find(e => time >= e.start && time <= e.end);
+      return entry ? entry.text : '';
+    }
+
+    video.addEventListener("timeupdate", () => {
+      if (!captionsVisible) {
+        caption1.textContent = '';
+        caption2.textContent = '';
+        return;
+      }
+      const t = video.currentTime;
+      caption1.textContent = getCaption(captions[0], t);
+      caption2.textContent = getCaption(captions[1], t);
+    });
+
+    toggleBtn.addEventListener("click", () => {
+      captionsVisible = !captionsVisible;
+      if (!captionsVisible) {
+        caption1.textContent = '';
+        caption2.textContent = '';
+        toggleBtn.textContent = "Show Captions";
+      } else {
+        toggleBtn.textContent = "Hide Captions";
+      }
+    });
+  </script>
+
+</body>
+</html>
