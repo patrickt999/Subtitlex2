@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>WebSRT</title>
+  <title>Dual Subtitles Video Player</title>
   <style>
     body {
       margin: 0;
@@ -17,14 +17,15 @@
       margin: 20px;
       color: #888;
     }
-    video {
-      width: 80%;
-      margin-top: 20px;
-      background: #000;
-    }
     #video-container {
       position: relative;
       display: inline-block;
+      width: 80%;
+      max-width: 1000px;
+    }
+    video {
+      width: 100%;
+      background: #000;
     }
     .caption {
       position: absolute;
@@ -37,6 +38,7 @@
     }
     #caption1 { bottom: 120px; }
     #caption2 { bottom: 80px; }
+
     #controls {
       margin: 20px;
     }
@@ -47,6 +49,7 @@
       color: white;
       border: 1px solid #555;
       cursor: pointer;
+      margin: 0 10px;
     }
     button:hover {
       background: #444;
@@ -59,6 +62,7 @@
 
   <div id="controls">
     <button id="toggleCaptionsBtn">Toggle Captions</button>
+    <button id="fullscreenBtn">Fullscreen</button>
   </div>
 
   <div id="video-container">
@@ -73,6 +77,8 @@
     const caption2 = document.getElementById("caption2");
     const dropZone = document.getElementById("drop-zone");
     const toggleBtn = document.getElementById("toggleCaptionsBtn");
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
+    const videoContainer = document.getElementById("video-container");
 
     let captions = [[], []];
     let captionsVisible = true;
@@ -151,6 +157,14 @@
         toggleBtn.textContent = "Show Captions";
       } else {
         toggleBtn.textContent = "Hide Captions";
+      }
+    });
+
+    fullscreenBtn.addEventListener("click", () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else {
+        videoContainer.requestFullscreen();
       }
     });
   </script>
