@@ -32,6 +32,14 @@ The video will play with both subtitle tracks shown.
 
 Use the "Toggle Captions" button to SHOW or HIDE subtitles.
 
+Shortcuts:
+
+c - show/hide captions
+
+f - fullscreen
+
+spacebar - play/pause
+
 
 Hosting:
 
