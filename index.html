@@ -61,7 +61,7 @@
   <div id="drop-zone">Drop a video file and 2 .srt files</div>
 
   <div id="controls">
-    <button id="toggleCaptionsBtn">Toggle Captions</button>
+    <button id="toggleCaptionsBtn">Hide Captions (C)</button>
     <button id="fullscreenBtn">Fullscreen</button>
   </div>
 
@@ -149,22 +149,30 @@
       caption2.textContent = getCaption(captions[1], t);
     });
 
-    toggleBtn.addEventListener("click", () => {
+    function toggleCaptions() {
       captionsVisible = !captionsVisible;
       if (!captionsVisible) {
         caption1.textContent = '';
         caption2.textContent = '';
-        toggleBtn.textContent = "Show Captions";
+        toggleBtn.textContent = "Show Captions (C)";
       } else {
-        toggleBtn.textContent = "Hide Captions";
+        toggleBtn.textContent = "Hide Captions (C)";
       }
-    });
+    }
+
+    toggleBtn.addEventListener("click", toggleCaptions);
 
     fullscreenBtn.addEventListener("click", () => {
       if (document.fullscreenElement) {
         document.exitFullscreen();
       } else {
         videoContainer.requestFullscreen();
+      }
+    });
+
+    document.addEventListener("keydown", e => {
+      if (e.key.toLowerCase() === 'c') {
+        toggleCaptions();
       }
     });
   </script>
