@@ -3,7 +3,7 @@
 This is a lightweight browser-based video player that allows you to drag and drop one video file and two .srt subtitle files. Both subtitle tracks are displayed simultaneously, with an option to toggle captions on or off.
 
 
-**Features:**
+#### Features:
 
 Play local video files (.mp4, .mkv, etc.)
 
@@ -16,23 +16,25 @@ Toggle button to show or hide all captions
 Runs entirely in the browser (no installation required)
 
 
-**How to Use:**
+#### How to Use:
 
-Open the index.html file in a modern desktop browser (Chrome, Firefox, Edge).
+Open the index.html file in a desktop browser (Chrome, Firefox, Edge).
 
-"Drag and drop" user interface
+"Drag and drop" user interface (Files must be dropped together!)
 
 -One video file
 
 -Two .srt subtitle files
 
-Files must be dropped together!
 
 The video will play with both subtitle tracks shown.
 
-Use the "Toggle Captions" button to SHOW or HIDE subtitles.
+Use the "Toggle Captions (C)" button to SHOW or HIDE subtitles.
 
-**Shortcuts**:
+Use the "Fullscreen (F)" button to play the video in fullscreen and press F or ESC to exit.
+
+
+#### Shortcuts:
 
 c - show/hide captions
 
@@ -41,7 +43,7 @@ f - fullscreen
 spacebar - play/pause
 
 
-**Hosting**:
+#### Hosting:
 
 I am hosting this at:
 
