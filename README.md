@@ -1,9 +1,9 @@
-WebSRT
+###WebSRT
 
 This is a lightweight browser-based video player that allows you to drag and drop one video file and two .srt subtitle files. Both subtitle tracks are displayed simultaneously, with an option to toggle captions on or off.
 
 
-Features:
+**Features:**
 
 Play local video files (.mp4, .mkv, etc.)
 
@@ -16,7 +16,7 @@ Toggle button to show or hide all captions
 Runs entirely in the browser (no installation required)
 
 
-How to Use:
+**How to Use:**
 
 Open the index.html file in a modern desktop browser (Chrome, Firefox, Edge).
 
@@ -32,7 +32,7 @@ The video will play with both subtitle tracks shown.
 
 Use the "Toggle Captions" button to SHOW or HIDE subtitles.
 
-Shortcuts:
+**Shortcuts**:
 
 c - show/hide captions
 
@@ -41,13 +41,13 @@ f - fullscreen
 spacebar - play/pause
 
 
-Hosting:
+**Hosting**:
 
-You can visit my website and use this video player:
+I am hosting this at:
 
 https://patrickt999.github.io/WebSRT/
 
-You can also host this on any static site hosting service:
+You can host this on any static site hosting service:
 
 -GitHub Pages
 
