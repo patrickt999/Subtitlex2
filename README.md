@@ -43,7 +43,11 @@ spacebar - play/pause
 
 Hosting:
 
-You can host this on any static site hosting service
+You can visit my website and use this video player:
+
+https://patrickt999.github.io/WebSRT/
+
+You can also host this on any static site hosting service:
 
 -GitHub Pages
 
