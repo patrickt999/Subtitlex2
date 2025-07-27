@@ -1,4 +1,4 @@
-###WebSRT
+# WebSRT
 
 This is a lightweight browser-based video player that allows you to drag and drop one video file and two .srt subtitle files. Both subtitle tracks are displayed simultaneously, with an option to toggle captions on or off.
 
