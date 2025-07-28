@@ -11,37 +11,58 @@
       font-family: sans-serif;
       text-align: center;
     }
+
     #drop-zone {
       border: 2px dashed #444;
       padding: 30px;
       margin: 20px;
       color: #888;
     }
+
     #video-container {
       position: relative;
       display: inline-block;
       width: 80%;
       max-width: 1000px;
     }
+
     video {
       width: 100%;
       background: #000;
     }
+
     .caption {
       position: absolute;
       width: 100%;
       text-align: center;
-      font-size: 1.5em;
+      font-size: 2.5vw;
       color: white;
       text-shadow: 2px 2px 4px #000;
       pointer-events: none;
+      line-height: 1.2;
+      padding: 0 1em;
+      box-sizing: border-box;
     }
+
     #caption1 { bottom: 120px; }
     #caption2 { bottom: 80px; }
+
+    @media (max-width: 600px) {
+      .caption {
+        font-size: 3.5vw;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .caption {
+        font-size: 1.8vw;
+      }
+    }
 
     #controls {
       margin: 20px;
     }
+
     button {
       padding: 10px 20px;
       font-size: 1em;
@@ -51,6 +72,7 @@
       cursor: pointer;
       margin: 0 10px;
     }
+
     button:hover {
       background: #444;
     }
@@ -58,7 +80,9 @@
 </head>
 <body>
 
-  <div id="drop-zone">Drag & Drop a video file and 2 subtitle files (.srt)</div>
+  <h1>WebSRT</h1>
+  <p>Drag & drop one video file AND two subtitle (.srt) files below</p>
+  <div id="drop-zone">three files here</div>
 
   <div id="controls">
     <button id="toggleCaptionsBtn">Hide Captions (C)</button>
@@ -93,12 +117,12 @@
       const srtFiles = files.filter(f => f.name.endsWith(".srt"));
 
       if (!videoFile) {
-        alert("Drop a valid video file (.mp4, .mkv, etc.)");
+        alert("Please drop a valid video file (.mp4, .mkv, etc.)");
         return;
       }
 
       if (srtFiles.length < 2) {
-        alert("Drop at least 2 .srt files.");
+        alert("Please drop two .srt subtitle files.");
         return;
       }
 
@@ -149,13 +173,9 @@
 
     function toggleCaptions() {
       captionsVisible = !captionsVisible;
-      if (!captionsVisible) {
-        caption1.textContent = '';
-        caption2.textContent = '';
-        toggleBtn.textContent = "Show Captions (C)";
-      } else {
-        toggleBtn.textContent = "Hide Captions (C)";
-      }
+      caption1.textContent = '';
+      caption2.textContent = '';
+      toggleBtn.textContent = captionsVisible ? "Hide Captions (C)" : "Show Captions (C)";
     }
 
     function toggleFullscreen() {
