@@ -3,7 +3,7 @@
 This is a lightweight browser-based video player that allows you to drag and drop one video file and two .srt subtitle files. Both subtitle tracks are displayed simultaneously, with an option to toggle captions on or off.
 
 
-#### Features:
+### Features:
 
 Play local video files (.mp4, .mkv, etc.)
 
@@ -16,7 +16,7 @@ Toggle button to show or hide all captions
 Runs entirely in the browser (no installation required)
 
 
-#### How to Use:
+### How to Use:
 
 Open the index.html file in a desktop browser (Chrome, Firefox, Edge).
 
@@ -34,7 +34,7 @@ Use the "Hide/Show Captions (C)" button to HIDE or SHOW subtitles.
 Use the "Fullscreen (F)" button to play the video in fullscreen and press F or ESC to exit.
 
 
-#### Shortcuts:
+### Shortcuts:
 
 c - show/hide captions
 
@@ -43,7 +43,7 @@ f - fullscreen
 spacebar - play/pause
 
 
-#### Hosting:
+### Hosting:
 
 I am hosting this at:
 
@@ -63,7 +63,7 @@ Simply upload the index.html file and access it via the browser.
 
 
 
-#### License:
+### License:
 
 This project is open source and available under the MIT License.
 
