@@ -58,24 +58,14 @@
 </head>
 <body>
 
-<style>
-  .center-text {
-    text-align: center;
-    margin-top: 20px;
-    font-family: sans-serif;
-  }
-</style>
-
-<div class="center-text">
-  <h2>WebSRT</h2>
-</div>
-
-<div id="drop-zone">Drag & Drop one video file and two subtitle.srt files</div>
-
-<div class="center-text">
+  <div id="drop-zone">drag & drop one video file and two subtitle .srt files</div>
   <p>spacebar to play and pause</p>
   <p>arrow keys to skip backward and forward</p>
-</div>
+
+  <div id="controls">
+    <button id="toggleCaptionsBtn">Hide Captions (C)</button>
+    <button id="fullscreenBtn">Fullscreen (F)</button>
+  </div>
 
   <div id="video-container">
     <video id="video" controls autoplay></video>
