@@ -3,58 +3,69 @@
 <head>
   <meta charset="UTF-8" />
   <title>WebSRT</title>
-  <style>
+<style>
     body {
-      margin: 0;
-      background: #000;
-      color: #fff;
-      font-family: sans-serif;
-      text-align: center;
+        margin: 0;
+        background: #000;
+        color: #fff;
+        font-family: sans-serif;
+        text-align: center;
     }
     #drop-zone {
-      border: 2px dashed #444;
-      padding: 30px;
-      margin: 20px;
-      color: #888;
+        border: 2px dashed #444;
+        padding: 30px;
+        margin: 20px;
+        color: #888;
     }
     #video-container {
-      position: relative;
-      display: inline-block;
-      width: 80%;
-      max-width: 1000px;
+        position: relative;
+        display: inline-block;
+        width: 80%;
+        max-width: 1000px;
     }
     video {
-      width: 100%;
-      background: #000;
+        width: 100%;
+        background: #000;
+        display: block;
     }
     .caption {
-      position: absolute;
-      width: 100%;
-      text-align: center;
-      font-size: 1.5em;
-      color: white;
-      text-shadow: 2px 2px 4px #000;
-      pointer-events: none;
+        position: absolute;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        font-size: 1.5em;
+        color: white;
+        text-shadow: 2px 2px 4px #000;
+        pointer-events: none;
+        z-index: 10;
     }
     #caption1 { bottom: 120px; }
     #caption2 { bottom: 80px; }
 
     #controls {
-      margin: 20px;
+        margin: 20px;
     }
     button {
-      padding: 10px 20px;
-      font-size: 1em;
-      background: #222;
-      color: white;
-      border: 1px solid #555;
-      cursor: pointer;
-      margin: 0 10px;
+        padding: 10px 20px;
+        font-size: 1em;
+        background: #222;
+        color: white;
+        border: 1px solid #555;
+        cursor: pointer;
+        margin: 0 10px;
     }
     button:hover {
-      background: #444;
+        background: #444;
     }
-  </style>
+
+    /* Force captions to show above video in fullscreen */
+    #video-container:fullscreen .caption,
+    #video-container:-webkit-full-screen .caption,
+    #video-container:-ms-fullscreen .caption {
+        display: block !important;
+        z-index: 10;
+    }
+</style>
 </head>
 <body>
 <h1 style="display:block;">WebSRT</h1>
