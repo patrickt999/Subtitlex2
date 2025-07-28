@@ -4,12 +4,13 @@
   <meta charset="UTF-8" />
   <title>WebSRT</title>
   <style>
-    body {
+    html, body {
       margin: 0;
       background: #000;
       color: #fff;
       font-family: sans-serif;
-      text-align: center;
+      height: 100%;
+      overflow: hidden;
     }
 
     #drop-zone {
@@ -21,13 +22,14 @@
 
     #video-container {
       position: relative;
-      display: inline-block;
       width: 80%;
       max-width: 1000px;
+      margin: auto;
     }
 
     video {
       width: 100%;
+      height: auto;
       background: #000;
     }
 
@@ -42,6 +44,7 @@
       line-height: 1.2;
       padding: 0 1em;
       box-sizing: border-box;
+      z-index: 10;
     }
 
     #caption1 { bottom: 120px; }
@@ -61,6 +64,7 @@
 
     #controls {
       margin: 20px;
+      text-align: center;
     }
 
     button {
@@ -76,15 +80,19 @@
     button:hover {
       background: #444;
     }
+
+    h1, p {
+      text-align: center;
+    }
   </style>
 </head>
 <body>
 
-  <h1>WebSRT</h1>
-  <p>drag & drop one video file AND two subtitle (.srt) files below</p>
-  <div id="drop-zone">drag & drop three files here</div>
-  <p>spacebar to play or pause video</p>
-  <p>arrow keys ← → to skip backwards or forwards five seconds </p>
+ <h2>WebSRT</h2>
+  <p>drag & drop one video file AND two subtitle (.srt) files below</p>
+  <div id="drop-zone">drag & drop three files here</div>
+  <p>spacebar to play or pause video</p>
+  <p>arrow keys ← → to skip backwards or forwards five seconds </p>
 
   <div id="controls">
     <button id="toggleCaptionsBtn">Hide Captions (C)</button>
