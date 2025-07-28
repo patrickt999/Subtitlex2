@@ -90,7 +90,7 @@
 
 <div style="text-align:center;">
     <h1>WebSRT</h1>
-    <p>drag & drop one video file and two subtitle .srt files below</p>
+    <p>drag & drop one video file and two .srt subtitle files below</p>
     <div id="drop-zone" style="display:inline-block; text-align:center; width:90%;">drag & drop three files here</div>
 </div>
 <ul style="text-align:center; list-style:none; padding:0; margin:10px 0;">
@@ -124,32 +124,37 @@
     dropZone.addEventListener("dragover", e => e.preventDefault());
 
     dropZone.addEventListener("drop", async e => {
-      e.preventDefault();
-      const files = [...e.dataTransfer.files];
+        e.preventDefault();
+        const files = [...e.dataTransfer.files];
 
-      const videoFile = files.find(f => f.type.startsWith("video/"));
-      const srtFiles = files.filter(f => f.name.endsWith(".srt"));
+        const videoFile = files.find(f => f.type.startsWith("video/"));
+        const srtFiles = files.filter(f => f.name.endsWith(".srt"));
 
-      if (!videoFile) {
-        alert("Please drop a valid video file (.mp4, .mkv, etc.)");
-        return;
-      }
+        if (!videoFile) {
+            alert("Please drop a valid video file (.mp4, .mkv, etc.)");
+            return;
+        }
 
-      if (srtFiles.length < 2) {
-        alert("Please drop two .srt subtitle files.");
-        return;
-      }
+        if (srtFiles.length < 2) {
+            alert("Please drop two .srt subtitle files.");
+            return;
+        }
 
-      video.src = URL.createObjectURL(videoFile);
-      video.load();
-      video.play();
+        video.src = URL.createObjectURL(videoFile);
+        video.load();
+        video.play();
 
-      const parsed = await Promise.all(srtFiles.slice(0, 2).map(async (file) => {
-        const text = await file.text();
-        return parseSRT(text);
-      }));
+        const parsed = await Promise.all(srtFiles.slice(0, 2).map(async (file) => {
+            const text = await file.text();
+            return parseSRT(text);
+        }));
 
-      captions = parsed;
+        captions = parsed;
+    });
+
+    // Scroll video into view on page load
+    window.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("video-container").scrollIntoView({ behavior: "smooth", block: "center" });
     });
 
     function parseSRT(data) {
