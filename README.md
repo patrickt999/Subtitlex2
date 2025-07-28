@@ -29,7 +29,7 @@ Open the index.html file in a desktop browser (Chrome, Firefox, Edge).
 
 The video will play with both subtitle tracks shown.
 
-Use the "Toggle Captions (C)" button to SHOW or HIDE subtitles.
+Use the "Hide/Show Captions (C)" button to HIDE or SHOW subtitles.
 
 Use the "Fullscreen (F)" button to play the video in fullscreen and press F or ESC to exit.
 
