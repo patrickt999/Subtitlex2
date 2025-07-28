@@ -61,7 +61,8 @@
     /* Force captions to show above video in fullscreen */
     #video-container:fullscreen .caption,
     #video-container:-webkit-full-screen .caption,
-    #video-container:-ms-fullscreen .caption {
+    #video-container:--ms-fullscreen .caption,
+    #video-container::-webkit-full-screen .caption {
         display: block !important;
         z-index: 10;
     }
