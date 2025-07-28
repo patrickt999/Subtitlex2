@@ -36,9 +36,9 @@ Use the "Fullscreen (F)" button to play the video in fullscreen and press F or E
 
 ### Shortcuts:
 
-c - show/hide captions
+C - hide/show captions
 
-f - fullscreen
+F - fullscreen
 
 spacebar - play/pause
 
