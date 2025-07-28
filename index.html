@@ -57,23 +57,23 @@
   </style>
 </head>
 <body>
-<h1>WebSRT</h1>
-  <div id="drop-zone">drag & drop one video file and two subtitle .srt files</div>
-  <p>spacebar to play and pause</p>
-  <p>arrow keys to skip backward and forward</p>
+<h1 style="display:block;">WebSRT</h1>
+<div id="drop-zone">drag & drop one video file and two subtitle .srt files</div>
+<p>spacebar to play and pause</p>
+<p>arrow keys to skip backward and forward</p>
 
-  <div id="controls">
+<div id="controls">
     <button id="toggleCaptionsBtn">Hide Captions (C)</button>
     <button id="fullscreenBtn">Fullscreen (F)</button>
-  </div>
+</div>
 
-  <div id="video-container">
+<div id="video-container">
     <video id="video" controls autoplay></video>
     <div id="caption1" class="caption"></div>
     <div id="caption2" class="caption"></div>
-  </div>
+</div>
 
-  <script>
+<script>
     const video = document.getElementById("video");
     const caption1 = document.getElementById("caption1");
     const caption2 = document.getElementById("caption2");
@@ -88,116 +88,117 @@
     dropZone.addEventListener("dragover", e => e.preventDefault());
 
     dropZone.addEventListener("drop", async e => {
-      e.preventDefault();
-      const files = [...e.dataTransfer.files];
+        e.preventDefault();
+        const files = [...e.dataTransfer.files];
 
-      const videoFile = files.find(f => f.type.startsWith("video/"));
-      const srtFiles = files.filter(f => f.name.endsWith(".srt"));
+        const videoFile = files.find(f => f.type.startsWith("video/"));
+        const srtFiles = files.filter(f => f.name.endsWith(".srt"));
 
-      if (!videoFile) {
-        alert("Drop a valid video file (.mp4, .mkv, etc.)");
-        return;
-      }
+        if (!videoFile) {
+            alert("Drop a valid video file (.mp4, .mkv, etc.)");
+            return;
+        }
 
-      if (srtFiles.length < 2) {
-        alert("Drop at least 2 .srt files.");
-        return;
-      }
+        if (srtFiles.length < 2) {
+            alert("Drop at least 2 .srt files.");
+            return;
+        }
 
-      video.src = URL.createObjectURL(videoFile);
-      video.load();
-      video.play();
+        video.src = URL.createObjectURL(videoFile);
+        video.load();
+        video.play();
 
-      const parsed = await Promise.all(srtFiles.slice(0, 2).map(async (file) => {
-        const text = await file.text();
-        return parseSRT(text);
-      }));
+        const parsed = await Promise.all(srtFiles.slice(0, 2).map(async (file) => {
+            const text = await file.text();
+            return parseSRT(text);
+        }));
 
-      captions = parsed;
+        captions = parsed;
     });
 
     function parseSRT(data) {
-      return data.split(/\r?\n\r?\n/).map(block => {
-        const lines = block.split(/\r?\n/);
-        const timeLine = lines.find(l => l.includes('-->'));
-        if (!timeLine) return null;
-        const [start, end] = timeLine.split(' --> ').map(parseTime);
-        const text = lines.slice(2).join("\n");
-        return { start, end, text };
-      }).filter(Boolean);
+        return data.split(/\r?\n\r?\n/).map(block => {
+            const lines = block.split(/\r?\n/);
+            const timeLine = lines.find(l => l.includes('-->'));
+            if (!timeLine) return null;
+            const [start, end] = timeLine.split(' --> ').map(parseTime);
+            const text = lines.slice(2).join("\n");
+            return { start, end, text };
+        }).filter(Boolean);
     }
 
     function parseTime(timeStr) {
-      const [h, m, s] = timeStr.split(':');
-      const [sec, ms] = s.split(',');
-      return (+h) * 3600 + (+m) * 60 + (+sec) + (+ms) / 1000;
+        const [h, m, s] = timeStr.split(':');
+        const [sec, ms] = s.split(',');
+        return (+h) * 3600 + (+m) * 60 + (+sec) + (+ms) / 1000;
     }
 
     function getCaption(track, time) {
-      const entry = track.find(e => time >= e.start && time <= e.end);
-      return entry ? entry.text : '';
+        if (!Array.isArray(track)) return '';
+        const entry = track.find(e => time >= e.start && time <= e.end);
+        return entry ? entry.text : '';
     }
 
     video.addEventListener("timeupdate", () => {
-      if (!captionsVisible) {
-        caption1.textContent = '';
-        caption2.textContent = '';
-        return;
-      }
-      const t = video.currentTime;
-      caption1.textContent = getCaption(captions[0], t);
-      caption2.textContent = getCaption(captions[1], t);
+        if (!captionsVisible) {
+            caption1.textContent = '';
+            caption2.textContent = '';
+            return;
+        }
+        const t = video.currentTime;
+        caption1.textContent = getCaption(captions[0], t);
+        caption2.textContent = getCaption(captions[1], t);
     });
 
     function toggleCaptions() {
-      captionsVisible = !captionsVisible;
-      if (!captionsVisible) {
-        caption1.textContent = '';
-        caption2.textContent = '';
-        toggleBtn.textContent = "Show Captions (C)";
-      } else {
-        toggleBtn.textContent = "Hide Captions (C)";
-      }
+        captionsVisible = !captionsVisible;
+        if (!captionsVisible) {
+            caption1.textContent = '';
+            caption2.textContent = '';
+            toggleBtn.textContent = "Show Captions (C)";
+        } else {
+            toggleBtn.textContent = "Hide Captions (C)";
+        }
     }
 
     function toggleFullscreen() {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      } else {
-        videoContainer.requestFullscreen();
-      }
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else {
+            videoContainer.requestFullscreen();
+        }
     }
 
     function togglePlayPause() {
-      if (video.paused) {
-        video.play();
-      } else {
-        video.pause();
-      }
+        if (video.paused) {
+            video.play();
+        } else {
+            video.pause();
+        }
     }
 
     toggleBtn.addEventListener("click", toggleCaptions);
     fullscreenBtn.addEventListener("click", toggleFullscreen);
 
     document.addEventListener("keydown", e => {
-      if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'textarea') return;
+        if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'textarea') return;
 
-      if (e.key === 'c' || e.key === 'C') {
-        e.preventDefault();
-        toggleCaptions();
-      }
+        if (e.key === 'c' || e.key === 'C') {
+            e.preventDefault();
+            toggleCaptions();
+        }
 
-      if (e.key === 'f' || e.key === 'F') {
-        e.preventDefault();
-        toggleFullscreen();
-      }
+        if (e.key === 'f' || e.key === 'F') {
+            e.preventDefault();
+            toggleFullscreen();
+        }
 
-      if (e.code === 'Space') {
-        e.preventDefault();
-        togglePlayPause();
-      }
+        if (e.code === 'Space') {
+            e.preventDefault();
+            togglePlayPause();
+        }
     });
-  </script>
+</script>
 
 </body>
 </html>
