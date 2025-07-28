@@ -6,6 +6,7 @@
   <style>
     html, body {
       margin: 0;
+      padding: 0;
       background: #000;
       color: #fff;
       font-family: sans-serif;
@@ -14,12 +15,12 @@
     }
 
     #drop-zone {
-      border: 2px dashed #444;
+      border: 2px dashed #666;
       padding: 30px;
       margin: 20px auto;
-      color: #888;
-      width: 98%;
+      width: 95%;
       max-width: 1200px;
+      color: #999;
       text-align: center;
       box-sizing: border-box;
     }
@@ -34,8 +35,8 @@
     video {
       width: 100%;
       height: auto;
-      background: #000;
       display: block;
+      background: #000;
     }
 
     .caption {
@@ -45,61 +46,65 @@
       font-size: 2.5vw;
       color: white;
       text-shadow: 2px 2px 4px #000;
-      pointer-events: none;
       line-height: 1.4;
       padding: 0 1em;
-      box-sizing: border-box;
-      z-index: 10;
-      white-space: pre-line;
+      pointer-events: none;
+      z-index: 1000;
+      white-space: pre-wrap;
     }
 
-    #caption1 { bottom: 140px; }
-    #caption2 { bottom: 80px; }
+    #caption1 { bottom: 15%; }
+    #caption2 { bottom: 8%; }
 
-    @media (max-width: 600px) {
-      .caption {
-        font-size: 3.5vw;
-      }
-    }
-
-    @media (min-width: 1200px) {
-      .caption {
-        font-size: 1.8vw;
-      }
-    }
-
-    /* Fix: Show captions in fullscreen */
     #video-container:fullscreen .caption,
     #video-container:-webkit-full-screen .caption,
-    #video-container:-moz-full-screen .caption {
+    #video-container:-moz-full-screen .caption,
+    #video-container:-ms-fullscreen .caption {
+      display: block;
+    }
+    /* Ensure captions are visible in fullscreen */
+    #video-container .caption {
       display: block;
     }
 
     #controls {
-      margin: 20px;
       text-align: center;
+      margin-top: 20px;
     }
 
     button {
       padding: 10px 20px;
       font-size: 1em;
       background: #222;
-      color: white;
+      color: #fff;
       border: 1px solid #555;
       cursor: pointer;
       margin: 0 10px;
+    }
+
+    /* Caption formatting*/
+    .caption {
+      max-width: 80%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 2vw;
+      line-height: 1.6;
+      padding: 0.3em 1.5em;
+      background: rgba(0,0,0,0.6);
+      border-radius: 0.3em;
+      box-sizing: border-box;
+      word-break: break-word;
     }
 
     button:hover {
       background: #444;
     }
 
-    h1, p {
+    h1, p, ul {
       text-align: center;
     }
 
     ul {
-      text-align: center;
       list-style: none;
       padding: 0;
       margin: 10px 0;
@@ -108,15 +113,15 @@
 </head>
 <body>
 
-  <div style="text-align:center;">
-    <h1>WebSRT</h1>
-    <p>drag & drop one video file and two subtitle .srt files below</p>
-    <div id="drop-zone">drag & drop three files here</div>
-  </div>
+  <h1>WebSRT</h1>
+  <p>Drag & drop one video file and two .srt files</p>
+  <div id="drop-zone">Drop your video and subtitle files here</div>
 
   <ul>
-    <li>spacebar: play or pause video</li>
-    <li>arrow keys (← →): skip backwards or forwards five seconds</li>
+    <li>Spacebar: Play/Pause</li>
+    <li>C: Toggle Captions</li>
+    <li>F: Fullscreen</li>
+    <li>←/→: Seek</li>
   </ul>
 
   <div id="controls">
@@ -131,62 +136,57 @@
   </div>
 
   <script>
-    const video = document.getElementById("video");
-    const caption1 = document.getElementById("caption1");
-    const caption2 = document.getElementById("caption2");
-    const dropZone = document.getElementById("drop-zone");
-    const toggleBtn = document.getElementById("toggleCaptionsBtn");
-    const fullscreenBtn = document.getElementById("fullscreenBtn");
-    const videoContainer = document.getElementById("video-container");
+    const video = document.getElementById('video');
+    const caption1 = document.getElementById('caption1');
+    const caption2 = document.getElementById('caption2');
+    const dropZone = document.getElementById('drop-zone');
+    const toggleBtn = document.getElementById('toggleCaptionsBtn');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const videoContainer = document.getElementById('video-container');
 
-    let captions = [[], []];
     let captionsVisible = true;
+    let captions = [[], []];
 
-    dropZone.addEventListener("dragover", e => e.preventDefault());
+    dropZone.addEventListener('dragover', e => e.preventDefault());
 
-    dropZone.addEventListener("drop", async e => {
+    dropZone.addEventListener('drop', async e => {
       e.preventDefault();
       const files = [...e.dataTransfer.files];
+      const videoFile = files.find(f => f.type.startsWith('video/'));
+      const srtFiles = files.filter(f => f.name.endsWith('.srt'));
 
-      const videoFile = files.find(f => f.type.startsWith("video/"));
-      const srtFiles = files.filter(f => f.name.endsWith(".srt"));
-
-      if (!videoFile) {
-        alert("Please drop a valid video file (.mp4, .mkv, etc.)");
-        return;
-      }
-
-      if (srtFiles.length < 2) {
-        alert("Please drop two .srt subtitle files.");
+      if (!videoFile || srtFiles.length < 2) {
+        alert('Please drop 1 video file and 2 .srt files.');
         return;
       }
 
       video.src = URL.createObjectURL(videoFile);
-      video.load();
       video.play();
 
-      const parsed = await Promise.all(srtFiles.slice(0, 2).map(async (file) => {
+      const results = await Promise.all(srtFiles.slice(0, 2).map(async file => {
         const text = await file.text();
         return parseSRT(text);
       }));
 
-      captions = parsed;
+      captions = results;
     });
 
-    function parseSRT(data) {
-      return data.split(/\r?\n\r?\n/).map(block => {
-        const lines = block.split(/\r?\n/);
-        const timeLine = lines.find(l => l.includes('-->'));
-        if (!timeLine) return null;
-        const [start, end] = timeLine.split(' --> ').map(parseTime);
-        const text = lines.slice(2).join("\n");
-        return { start, end, text };
-      }).filter(Boolean);
+    function parseSRT(text) {
+      return text.split(/\r?\n\r?\n/)
+        .map(block => {
+          const lines = block.split(/\r?\n/);
+          const timeLine = lines.find(l => l.includes('-->'));
+          if (!timeLine) return null;
+          const [start, end] = timeLine.split(' --> ').map(parseTime);
+          const content = lines.slice(2).join('\n');
+          return { start, end, text: content };
+        })
+        .filter(Boolean);
     }
 
-    function parseTime(timeStr) {
-      const [h, m, s] = timeStr.split(":");
-      const [sec, ms] = s.split(",");
+    function parseTime(t) {
+      const [h, m, s] = t.split(':');
+      const [sec, ms] = s.split(',');
       return (+h) * 3600 + (+m) * 60 + (+sec) + (+ms) / 1000;
     }
 
@@ -195,7 +195,7 @@
       return entry ? entry.text : '';
     }
 
-    video.addEventListener("timeupdate", () => {
+    video.addEventListener('timeupdate', () => {
       if (!captionsVisible) {
         caption1.textContent = '';
         caption2.textContent = '';
@@ -210,7 +210,7 @@
       captionsVisible = !captionsVisible;
       caption1.textContent = '';
       caption2.textContent = '';
-      toggleBtn.textContent = captionsVisible ? "Hide Captions (C)" : "Show Captions (C)";
+      toggleBtn.textContent = captionsVisible ? 'Hide Captions (C)' : 'Show Captions (C)';
     }
 
     function toggleFullscreen() {
@@ -222,41 +222,22 @@
     }
 
     function togglePlayPause() {
-      if (video.paused) {
-        video.play();
-      } else {
-        video.pause();
-      }
+      video.paused ? video.play() : video.pause();
     }
 
-    toggleBtn.addEventListener("click", toggleCaptions);
-    fullscreenBtn.addEventListener("click", toggleFullscreen);
+    toggleBtn.addEventListener('click', toggleCaptions);
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
 
-    document.addEventListener("keydown", e => {
+    document.addEventListener('keydown', e => {
       if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'textarea') return;
-
-      if (e.key === 'c' || e.key === 'C') {
-        e.preventDefault();
-        toggleCaptions();
-      }
-
-      if (e.key === 'f' || e.key === 'F') {
-        e.preventDefault();
-        toggleFullscreen();
-      }
-
+      if (e.key === 'c' || e.key === 'C') toggleCaptions();
+      if (e.key === 'f' || e.key === 'F') toggleFullscreen();
       if (e.code === 'Space') {
         e.preventDefault();
         togglePlayPause();
       }
-
-      if (e.key === 'ArrowRight') {
-        video.currentTime += 5;
-      }
-
-      if (e.key === 'ArrowLeft') {
-        video.currentTime -= 5;
-      }
+      if (e.key === 'ArrowLeft') video.currentTime -= 5;
+      if (e.key === 'ArrowRight') video.currentTime += 5;
     });
   </script>
 </body>
