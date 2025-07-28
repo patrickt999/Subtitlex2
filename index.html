@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>WebSRT</title>
+  <title>WebSRT Fullscreen Test</title>
   <style>
     html, body {
       margin: 0;
@@ -53,13 +52,20 @@
       margin: 0 auto;
     }
 
+    #video-fullscreen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
     video {
       width: 100%;
       background: #000;
+      display: block;
     }
 
     .caption {
-      position: fixed;
+      position: absolute;
       left: 50%;
       transform: translateX(-50%);
       width: 90%;
@@ -72,6 +78,7 @@
       pointer-events: none;
       white-space: pre-line;
       padding: 0 20px;
+      display: block;
     }
 
     #caption1 { bottom: 16%; }
@@ -90,11 +97,12 @@
 </div>
 
 <div id="video-container">
-  <video id="video" controls></video>
+  <div id="video-fullscreen">
+    <video id="video" controls></video>
+    <div id="caption1" class="caption"></div>
+    <div id="caption2" class="caption"></div>
+  </div>
 </div>
-
-<div id="caption1" class="caption"></div>
-<div id="caption2" class="caption"></div>
 
 <script>
   const video = document.getElementById("video");
@@ -103,6 +111,7 @@
   const dropZone = document.getElementById("drop-zone");
   const toggleBtn = document.getElementById("toggleCaptionsBtn");
   const fullscreenBtn = document.getElementById("fullscreenBtn");
+  const videoFullscreen = document.getElementById("video-fullscreen");
 
   let captions = [[], []];
   let captionsVisible = true;
@@ -150,9 +159,21 @@
     if (document.fullscreenElement) {
       document.exitFullscreen();
     } else {
-      video.requestFullscreen();
+      videoFullscreen.requestFullscreen();
     }
   };
+
+  // Adjust caption font size in fullscreen for readability
+  function updateCaptionStyles() {
+    if (document.fullscreenElement === videoFullscreen) {
+      caption1.style.fontSize = "2.5vw";
+      caption2.style.fontSize = "2.5vw";
+    } else {
+      caption1.style.fontSize = "1.8vw";
+      caption2.style.fontSize = "1.8vw";
+    }
+  }
+  document.addEventListener("fullscreenchange", updateCaptionStyles);
 
   document.addEventListener("keydown", e => {
     if (e.target.tagName.match(/input|textarea/i)) return;
