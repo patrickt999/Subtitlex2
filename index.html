@@ -6,31 +6,41 @@
   <style>
     html, body {
       margin: 0;
+      padding: 0;
+      height: 100%;
       background: #000;
       color: #fff;
       font-family: sans-serif;
-      height: 100%;
-      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
     }
 
     #drop-zone {
       border: 2px dashed #444;
-      padding: 30px;
-      margin: 20px;
+      padding: 20px;
+      margin: 10px;
       color: #888;
+      width: 90%;
+      max-width: 800px;
+      text-align: center;
+      box-sizing: border-box;
     }
 
     #video-container {
       position: relative;
-      width: 80%;
+      width: 90%;
       max-width: 1000px;
-      margin: auto;
+      margin: 10px 0;
+      box-sizing: border-box;
     }
 
     video {
       width: 100%;
       height: auto;
       background: #000;
+      display: block;
     }
 
     .caption {
@@ -51,19 +61,28 @@
     #caption2 { bottom: 80px; }
 
     @media (max-width: 600px) {
-      .caption {
-        font-size: 3.5vw;
-      }
+      .caption { font-size: 3.5vw; }
     }
 
     @media (min-width: 1200px) {
-      .caption {
-        font-size: 1.8vw;
-      }
+      .caption { font-size: 1.8vw; }
+    }
+
+    /* Fullscreen caption compatibility */
+    :fullscreen .caption,
+    :-webkit-full-screen .caption,
+    :-moz-full-screen .caption {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      font-size: 2.5vw;
+      color: white;
+      text-shadow: 2px 2px 4px #000;
+      z-index: 1000;
     }
 
     #controls {
-      margin: 20px;
+      margin: 10px;
       text-align: center;
     }
 
@@ -81,22 +100,31 @@
       background: #444;
     }
 
-    h1, p {
+    h1, p, ul {
       text-align: center;
+      margin: 10px 0;
+      padding: 0;
+    }
+
+    ul {
+      list-style: none;
     }
   </style>
 </head>
 <body>
 
-<div style="text-align:center;">
-    <h1>WebSRT</h1>
-    <p>drag & drop one video file and two .srt subtitle files below</p>
-    <div id="drop-zone" style="display:inline-block; text-align:center; width:90%;">drag & drop three files here</div>
-</div>
-<ul style="text-align:center; list-style:none; padding:0; margin:10px 0;">
-    <li>Spacebar: play or pause video</li>
-    <li>Arrow keys (← →): skip backwards or forwards five seconds</li>
-</ul>
+  <h1>WebSRT</h1>
+  <p>Drag and drop one video file and two .srt subtitle files below.</p>
+
+  <div id="drop-zone">Drag & drop 1 video and 2 .srt subtitle files here</div>
+
+  <ul>
+    <li><strong>Spacebar</strong>: Play/Pause</li>
+    <li><strong>C</strong>: Toggle Captions</li>
+    <li><strong>F</strong>: Fullscreen</li>
+    <li><strong>← →</strong>: Seek backward/forward 5s</li>
+    <li><strong>↑ ↓</strong>: Volume up/down</li>
+  </ul>
 
   <div id="controls">
     <button id="toggleCaptionsBtn">Hide Captions (C)</button>
@@ -124,37 +152,32 @@
     dropZone.addEventListener("dragover", e => e.preventDefault());
 
     dropZone.addEventListener("drop", async e => {
-        e.preventDefault();
-        const files = [...e.dataTransfer.files];
+      e.preventDefault();
+      const files = [...e.dataTransfer.files];
 
-        const videoFile = files.find(f => f.type.startsWith("video/"));
-        const srtFiles = files.filter(f => f.name.endsWith(".srt"));
+      const videoFile = files.find(f => f.type.startsWith("video/"));
+      const srtFiles = files.filter(f => f.name.endsWith(".srt"));
 
-        if (!videoFile) {
-            alert("Please drop a valid video file (.mp4, .mkv, etc.)");
-            return;
-        }
+      if (!videoFile) {
+        alert("Please drop a valid video file (.mp4, .mkv, etc.)");
+        return;
+      }
 
-        if (srtFiles.length < 2) {
-            alert("Please drop two .srt subtitle files.");
-            return;
-        }
+      if (srtFiles.length < 2) {
+        alert("Please drop two .srt subtitle files.");
+        return;
+      }
 
-        video.src = URL.createObjectURL(videoFile);
-        video.load();
-        video.play();
+      video.src = URL.createObjectURL(videoFile);
+      video.load();
+      video.play();
 
-        const parsed = await Promise.all(srtFiles.slice(0, 2).map(async (file) => {
-            const text = await file.text();
-            return parseSRT(text);
-        }));
+      const parsed = await Promise.all(srtFiles.slice(0, 2).map(async (file) => {
+        const text = await file.text();
+        return parseSRT(text);
+      }));
 
-        captions = parsed;
-    });
-
-    // Scroll video into view on page load
-    window.addEventListener("DOMContentLoaded", () => {
-        document.getElementById("video-container").scrollIntoView({ behavior: "smooth", block: "center" });
+      captions = parsed;
     });
 
     function parseSRT(data) {
@@ -219,10 +242,10 @@
     document.addEventListener("keydown", e => {
       if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'textarea') return;
 
-    if (e.key === 'c' || e.key === 'C') {
-      e.preventDefault();
-      toggleCaptions();
-    }
+      if (e.key === 'c' || e.key === 'C') {
+        e.preventDefault();
+        toggleCaptions();
+      }
 
       if (e.key === 'f' || e.key === 'F') {
         e.preventDefault();
