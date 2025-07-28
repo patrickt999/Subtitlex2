@@ -1,239 +1,455 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>WebSRT</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #000;
-      color: #fff;
-      font-family: sans-serif;
-      height: 100%;
-      overflow: auto;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSRT</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    #drop-zone {
-      border: 2px dashed #666;
-      padding: 30px;
-      margin: 20px auto;
-      width: 95%;
-      max-width: 1200px;
-      color: #999;
-      text-align: center;
-      box-sizing: border-box;
-    }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-    #video-container {
-      position: relative;
-      width: 80%;
-      max-width: 1000px;
-      margin: 40px auto;
-    }
+        /* Video container */
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
 
-    video {
-      width: 100%;
-      height: auto;
-      display: block;
-      background: #000;
-    }
+        /* Video element */
+        #videoPlayer {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
 
-    .caption {
-      position: absolute;
-      width: 100%;
-      text-align: center;
-      color: white;
-      text-shadow: 2px 2px 4px #000;
-      padding: 0 1em;
-      pointer-events: none;
-      z-index: 1000;
-      white-space: pre-wrap;
-      max-width: 80%;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 2vw;
-      line-height: 1.6;
-      padding: 0.3em 1.5em;
-      background: rgba(0,0,0,0.6);
-      border-radius: 0.3em;
-      box-sizing: border-box;
-      word-break: break-word;
-    }
+        /* Hide default video text tracks */
+        #videoPlayer::cue {
+            display: none;
+        }
 
-    #caption1 { bottom: 15%; }
-    #caption2 { bottom: 8%; }
+        /* Custom subtitle overlay */
+        .subtitle-overlay {
+            position: absolute;
+            bottom: 60px;
+            left: 0;
+            right: 0;
+            pointer-events: none;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding: 0 20px;
+        }
 
-    /* Ensure captions are visible in fullscreen for both container and video */
-    #video-container:fullscreen .caption,
-    #video-container:-webkit-full-screen .caption,
-    #video-container:-moz-full-screen .caption,
-    #video-container:-ms-fullscreen .caption,
-    video:fullscreen ~ .caption,
-    video:-webkit-full-screen ~ .caption,
-    video:-moz-full-screen ~ .caption,
-    video:-ms-fullscreen ~ .caption {
-      display: block;
-    }
+        /* Subtitle text styling */
+        .subtitle-text {
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 1.4;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-align: center;
+            max-width: 80%;
+            word-wrap: break-word;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(2px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
 
-    #controls {
-      text-align: center;
-      margin-top: 20px;
-    }
+        .subtitle-text.visible {
+            opacity: 1;
+        }
 
-    button {
-      padding: 10px 20px;
-      font-size: 1em;
-      background: #222;
-      color: #fff;
-      border: 1px solid #555;
-      cursor: pointer;
-      margin: 0 10px;
-    }
+        /* Controls */
+        .controls {
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
 
-    button:hover {
-      background: #444;
-    }
+        .controls button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
 
-    h1, p, ul {
-      text-align: center;
-    }
+        .controls button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
 
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 10px 0;
-    }
-  </style>
+        #progressBar {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        #progressBar::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        #timeDisplay {
+            color: white;
+            font-size: 14px;
+            min-width: 100px;
+            text-align: right;
+        }
+
+        /* Fullscreen styles */
+        .video-container:-webkit-full-screen {
+            width: 100vw;
+            height: 100vh;
+            max-width: none;
+            border-radius: 0;
+        }
+
+        .video-container:-moz-full-screen {
+            width: 100vw;
+            height: 100vh;
+            max-width: none;
+            border-radius: 0;
+        }
+
+        .video-container:fullscreen {
+            width: 100vw;
+            height: 100vh;
+            max-width: none;
+            border-radius: 0;
+        }
+
+        /* Fullscreen subtitle adjustments */
+        .video-container:-webkit-full-screen .subtitle-overlay,
+        .video-container:-moz-full-screen .subtitle-overlay,
+        .video-container:fullscreen .subtitle-overlay {
+            bottom: 80px;
+            padding: 0 40px;
+        }
+
+        .video-container:-webkit-full-screen .subtitle-text,
+        .video-container:-moz-full-screen .subtitle-text,
+        .video-container:fullscreen .subtitle-text {
+            font-size: 24px;
+            padding: 12px 20px;
+            max-width: 70%;
+        }
+
+        /* Fullscreen controls */
+        .video-container:-webkit-full-screen .controls,
+        .video-container:-moz-full-screen .controls,
+        .video-container:fullscreen .controls {
+            padding: 20px 40px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .subtitle-text {
+                font-size: 16px;
+                padding: 6px 12px;
+                max-width: 90%;
+            }
+
+            .subtitle-overlay {
+                bottom: 50px;
+                padding: 0 15px;
+            }
+
+            .controls {
+                padding: 10px;
+                gap: 8px;
+            }
+
+            .controls button {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+
+            #timeDisplay {
+                font-size: 12px;
+                min-width: 80px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .subtitle-text {
+                font-size: 14px;
+                padding: 4px 8px;
+            }
+
+            .subtitle-overlay {
+                bottom: 40px;
+                padding: 0 10px;
+            }
+        }
+
+        /* Hide native subtitle tracks */
+        video::-webkit-media-text-track-display {
+            display: none !important;
+        }
+    </style>
 </head>
 <body>
+    <div class="video-container">
+        <video id="videoPlayer" controls crossorigin="anonymous">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
 
-  <h1>WebSRT</h1>
-  <p>Drag & drop one video file and two .srt files</p>
-  <div id="drop-zone">Drop your video and subtitle files here</div>
+        <!-- Custom subtitle overlay for better control -->
+        <div id="subtitleOverlay" class="subtitle-overlay">
+            <div id="subtitleText" class="subtitle-text"></div>
+        </div>
 
-  <ul>
-    <li>Spacebar: Play/Pause</li>
-    <li>C: Toggle Captions</li>
-    <li>F: Fullscreen</li>
-    <li>←/→: Seek</li>
-  </ul>
+        <!-- Controls -->
+        <div class="controls">
+            <button id="playPauseBtn">Play/Pause</button>
+            <button id="fullscreenBtn">Fullscreen</button>
+            <button id="toggleSubtitles">Toggle Subtitles</button>
+            <input type="range" id="progressBar" min="0" max="100" value="0">
+            <span id="timeDisplay">0:00 / 0:00</span>
+        </div>
+    </div>
 
-  <div id="controls">
-    <button id="toggleCaptionsBtn">Hide Captions (C)</button>
-    <button id="fullscreenBtn">Fullscreen (F)</button>
-  </div>
+    <script>
+        // Sample subtitle data embedded in JavaScript
+        const subtitleData = [
+            { start: 0, end: 5, text: "Welcome to the video player with enhanced subtitles!" },
+            { start: 5, end: 10, text: "These subtitles are designed to look great and work perfectly in fullscreen mode." },
+            { start: 10, end: 15, text: "The text has proper contrast with a semi-transparent background." },
+            { start: 15, end: 20, text: "You can toggle subtitles on/off using the button or pressing 'S'." },
+            { start: 20, end: 25, text: "Press 'F' to toggle fullscreen mode and see how subtitles adapt." },
+            { start: 25, end: 30, text: "Use spacebar to play/pause and arrow keys to skip forward/backward." },
+            { start: 30, end: 35, text: "The subtitles maintain their styling and position in all viewing modes." },
+            { start: 35, end: 40, text: "This implementation ensures accessibility and great user experience." },
+            { start: 40, end: 45, text: "Enjoy your enhanced video viewing experience!" }
+        ];
 
-  <div id="video-container">
-    <video id="video" controls autoplay></video>
-    <div id="caption1" class="caption"></div>
-    <div id="caption2" class="caption"></div>
-  </div>
+        class VideoPlayer {
+            constructor() {
+                this.video = document.getElementById('videoPlayer');
+                this.subtitleOverlay = document.getElementById('subtitleOverlay');
+                this.subtitleText = document.getElementById('subtitleText');
+                this.playPauseBtn = document.getElementById('playPauseBtn');
+                this.fullscreenBtn = document.getElementById('fullscreenBtn');
+                this.toggleSubtitlesBtn = document.getElementById('toggleSubtitles');
+                this.progressBar = document.getElementById('progressBar');
+                this.timeDisplay = document.getElementById('timeDisplay');
+                this.videoContainer = document.querySelector('.video-container');
 
-  <script>
-    const video = document.getElementById('video');
-    const caption1 = document.getElementById('caption1');
-    const caption2 = document.getElementById('caption2');
-    const dropZone = document.getElementById('drop-zone');
-    const toggleBtn = document.getElementById('toggleCaptionsBtn');
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const videoContainer = document.getElementById('video-container');
+                this.subtitlesEnabled = true;
+                this.subtitleData = subtitleData;
 
-    let captionsVisible = true;
-    let captions = [[], []];
+                this.init();
+            }
 
-    dropZone.addEventListener('dragover', e => e.preventDefault());
+            init() {
+                this.setupEventListeners();
+            }
 
-    dropZone.addEventListener('drop', async e => {
-      e.preventDefault();
-      const files = [...e.dataTransfer.files];
-      const videoFile = files.find(f => f.type.startsWith('video/'));
-      const srtFiles = files.filter(f => f.name.endsWith('.srt'));
+            setupEventListeners() {
+                // Video events
+                this.video.addEventListener('play', () => this.updatePlayPauseButton());
+                this.video.addEventListener('pause', () => this.updatePlayPauseButton());
+                this.video.addEventListener('timeupdate', () => this.handleTimeUpdate());
+                this.video.addEventListener('loadedmetadata', () => this.handleLoadedMetadata());
 
-      if (!videoFile || srtFiles.length < 2) {
-        alert('Please drop 1 video file and 2 .srt files.');
-        return;
-      }
+                // Control events
+                this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
+                this.fullscreenBtn.addEventListener('click', () => this.toggleFullscreen());
+                this.toggleSubtitlesBtn.addEventListener('click', () => this.toggleSubtitles());
+                this.progressBar.addEventListener('input', () => this.handleProgressChange());
 
-      video.src = URL.createObjectURL(videoFile);
-      video.play();
+                // Fullscreen events
+                document.addEventListener('fullscreenchange', () => this.handleFullscreenChange());
+                document.addEventListener('webkitfullscreenchange', () => this.handleFullscreenChange());
+                document.addEventListener('mozfullscreenchange', () => this.handleFullscreenChange());
 
-      const results = await Promise.all(srtFiles.slice(0, 2).map(async file => {
-        const text = await file.text();
-        return parseSRT(text);
-      }));
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => this.handleKeydown(e));
+            }
 
-      captions = results;
-    });
+            displaySubtitles() {
+                if (!this.subtitlesEnabled) {
+                    this.subtitleText.classList.remove('visible');
+                    return;
+                }
 
-    function parseSRT(text) {
-      return text.split(/\r?\n\r?\n/)
-        .map(block => {
-          const lines = block.split(/\r?\n/);
-          const timeLine = lines.find(l => l.includes('-->'));
-          if (!timeLine) return null;
-          const [start, end] = timeLine.split(' --> ').map(parseTime);
-          const content = lines.slice(2).join('\n');
-          return { start, end, text: content };
-        })
-        .filter(Boolean);
-    }
+                const currentTime = this.video.currentTime;
+                const currentSubtitle = this.subtitleData.find(sub =>
+                    currentTime >= sub.start && currentTime <= sub.end
+                );
 
-    function parseTime(t) {
-      const [h, m, s] = t.split(':');
-      const [sec, ms] = s.split(',');
-      return (+h) * 3600 + (+m) * 60 + (+sec) + (+ms) / 1000;
-    }
+                if (currentSubtitle) {
+                    this.subtitleText.textContent = currentSubtitle.text;
+                    this.subtitleText.classList.add('visible');
+                } else {
+                    this.subtitleText.classList.remove('visible');
+                }
+            }
 
-    function getCaption(track, time) {
-      const entry = track.find(e => time >= e.start && time <= e.end);
-      return entry ? entry.text : '';
-    }
+            togglePlayPause() {
+                if (this.video.paused) {
+                    this.video.play();
+                } else {
+                    this.video.pause();
+                }
+            }
 
-    video.addEventListener('timeupdate', () => {
-      if (!captionsVisible) {
-        caption1.textContent = '';
-        caption2.textContent = '';
-        return;
-      }
-      const t = video.currentTime;
-      caption1.textContent = getCaption(captions[0], t);
-      caption2.textContent = getCaption(captions[1], t);
-    });
+            updatePlayPauseButton() {
+                this.playPauseBtn.textContent = this.video.paused ? 'Play' : 'Pause';
+            }
 
-    function toggleCaptions() {
-      captionsVisible = !captionsVisible;
-      caption1.textContent = '';
-      caption2.textContent = '';
-      toggleBtn.textContent = captionsVisible ? 'Hide Captions (C)' : 'Show Captions (C)';
-    }
+            toggleFullscreen() {
+                if (!document.fullscreenElement &&
+                    !document.webkitFullscreenElement &&
+                    !document.mozFullScreenElement) {
+                    this.enterFullscreen();
+                } else {
+                    this.exitFullscreen();
+                }
+            }
 
-    function toggleFullscreen() {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      } else {
-        videoContainer.requestFullscreen();
-      }
-    }
+            enterFullscreen() {
+                const container = this.videoContainer;
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container.mozRequestFullScreen) {
+                    container.mozRequestFullScreen();
+                }
+            }
 
-    function togglePlayPause() {
-      video.paused ? video.play() : video.pause();
-    }
+            exitFullscreen() {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                }
+            }
 
-    toggleBtn.addEventListener('click', toggleCaptions);
-    fullscreenBtn.addEventListener('click', toggleFullscreen);
+            handleFullscreenChange() {
+                const isFullscreen = !!(document.fullscreenElement ||
+                                       document.webkitFullscreenElement ||
+                                       document.mozFullScreenElement);
 
-    document.addEventListener('keydown', e => {
-      if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'textarea') return;
-      if (e.key === 'c' || e.key === 'C') toggleCaptions();
-      if (e.key === 'f' || e.key === 'F') toggleFullscreen();
-      if (e.code === 'Space') {
-        e.preventDefault();
-        togglePlayPause();
-      }
-      if (e.key === 'ArrowLeft') video.currentTime -= 5;
-      if (e.key === 'ArrowRight') video.currentTime += 5;
-    });
-  </script>
+                this.fullscreenBtn.textContent = isFullscreen ? 'Exit Fullscreen' : 'Fullscreen';
+
+                // Ensure subtitles remain visible in fullscreen
+                if (isFullscreen) {
+                    this.subtitleOverlay.style.zIndex = '2147483647'; // Maximum z-index
+                } else {
+                    this.subtitleOverlay.style.zIndex = '10';
+                }
+            }
+
+            toggleSubtitles() {
+                this.subtitlesEnabled = !this.subtitlesEnabled;
+                this.toggleSubtitlesBtn.textContent = this.subtitlesEnabled ? 'Hide Subtitles' : 'Show Subtitles';
+                this.displaySubtitles();
+            }
+
+            handleTimeUpdate() {
+                const progress = (this.video.currentTime / this.video.duration) * 100;
+                this.progressBar.value = progress || 0;
+
+                this.updateTimeDisplay();
+                this.displaySubtitles();
+            }
+
+            handleLoadedMetadata() {
+                this.updateTimeDisplay();
+                this.progressBar.max = 100;
+            }
+
+            handleProgressChange() {
+                const time = (this.progressBar.value / 100) * this.video.duration;
+                this.video.currentTime = time;
+            }
+
+            updateTimeDisplay() {
+                const current = this.formatTime(this.video.currentTime || 0);
+                const duration = this.formatTime(this.video.duration || 0);
+                this.timeDisplay.textContent = `${current} / ${duration}`;
+            }
+
+            formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            handleKeydown(e) {
+                // Only handle keys when video container is focused or no input is focused
+                if (document.activeElement.tagName === 'INPUT') return;
+
+                switch(e.code) {
+                    case 'Space':
+                        e.preventDefault();
+                        this.togglePlayPause();
+                        break;
+                    case 'KeyF':
+                        e.preventDefault();
+                        this.toggleFullscreen();
+                        break;
+                    case 'KeyS':
+                        e.preventDefault();
+                        this.toggleSubtitles();
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        this.video.currentTime = Math.max(0, this.video.currentTime - 10);
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        this.video.currentTime = Math.min(this.video.duration, this.video.currentTime + 10);
+                        break;
+                }
+            }
+        }
+
+        // Initialize the video player when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new VideoPlayer();
+        });
+    </script>
 </body>
 </html>
