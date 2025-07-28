@@ -6,41 +6,35 @@
   <style>
     html, body {
       margin: 0;
-      padding: 0;
-      height: 100%;
       background: #000;
       color: #fff;
       font-family: sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
+      height: 100%;
+      overflow: auto;
     }
 
     #drop-zone {
       border: 2px dashed #444;
-      padding: 20px;
-      margin: 10px;
+      padding: 30px;
+      margin: 20px auto;
       color: #888;
-      width: 90%;
-      max-width: 800px;
+      width: 98%;
+      max-width: 1200px;
       text-align: center;
       box-sizing: border-box;
     }
 
     #video-container {
       position: relative;
-      width: 90%;
+      width: 80%;
       max-width: 1000px;
-      margin: 10px 0;
-      box-sizing: border-box;
+      margin: 40px auto;
     }
 
     video {
       width: 100%;
       height: auto;
       background: #000;
-      display: block;
     }
 
     .caption {
@@ -61,14 +55,17 @@
     #caption2 { bottom: 80px; }
 
     @media (max-width: 600px) {
-      .caption { font-size: 3.5vw; }
+      .caption {
+        font-size: 3.5vw;
+      }
     }
 
     @media (min-width: 1200px) {
-      .caption { font-size: 1.8vw; }
+      .caption {
+        font-size: 1.8vw;
+      }
     }
 
-    /* Fullscreen caption compatibility */
     :fullscreen .caption,
     :-webkit-full-screen .caption,
     :-moz-full-screen .caption {
@@ -82,7 +79,7 @@
     }
 
     #controls {
-      margin: 10px;
+      margin: 20px;
       text-align: center;
     }
 
@@ -100,30 +97,31 @@
       background: #444;
     }
 
-    h1, p, ul {
+    h1, p {
       text-align: center;
-      margin: 10px 0;
-      padding: 0;
     }
 
     ul {
+      text-align: center;
       list-style: none;
+      padding: 0;
+      margin: 10px 0;
     }
   </style>
 </head>
 <body>
 
-  <h1>WebSRT</h1>
-  <p>Drag and drop one video file and two .srt subtitle files below.</p>
-
-  <div id="drop-zone">Drag & drop 1 video and 2 .srt subtitle files here</div>
+  <div style="text-align:center;">
+    <h1>WebSRT</h1>
+    <p>drag & drop one video file and two .srt subtitle files below</p>
+    <div id="drop-zone">drag & drop three files here</div>
+  </div>
 
   <ul>
-    <li><strong>Spacebar</strong>: Play/Pause</li>
-    <li><strong>C</strong>: Toggle Captions</li>
-    <li><strong>F</strong>: Fullscreen</li>
-    <li><strong>← →</strong>: Seek backward/forward 5s</li>
-    <li><strong>↑ ↓</strong>: Volume up/down</li>
+    <li>Spacebar: play or pause video</li>
+    <li>Arrow keys (← →): skip backwards or forwards five seconds</li>
+    <li>C: show/hide captions</li>
+    <li>F: toggle fullscreen</li>
   </ul>
 
   <div id="controls">
