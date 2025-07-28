@@ -219,10 +219,10 @@
     document.addEventListener("keydown", e => {
       if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'textarea') return;
 
-      if (e.key === 'c' || e.key === 'C') {
-        e.preventDefault();
-        toggleCaptions();
-      }
+    if (e.key === 'c' || e.key === 'C') {
+      e.preventDefault();
+      toggleCaptions();
+    }
 
       if (e.key === 'f' || e.key === 'F') {
         e.preventDefault();
