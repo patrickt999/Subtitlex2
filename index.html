@@ -23,13 +23,19 @@
       color: #999;
       text-align: center;
       box-sizing: border-box;
+      transition: background 0.3s, border-color 0.3s;
+    }
+
+    #drop-zone.dragover {
+      background: #0f0;
+      border-color: #0f0;
+      color: #000;
     }
 
     #video-container {
-      position: relative;
       width: 80%;
       max-width: 1000px;
-      margin: 40px auto;
+      margin: 40px auto 10px;
     }
 
     video {
@@ -40,41 +46,29 @@
     }
 
     .caption {
-      position: absolute;
-      left: 0;
-      right: 0;
       text-align: center;
-      font-size: 2.5vw;
+      font-size: 1.2vw;
       color: white;
       text-shadow: 2px 2px 4px #000;
       line-height: 1.4;
-      padding: 0 2vw;
-      pointer-events: none;
-      z-index: 10000;
+      padding: 10px 2vw;
       white-space: pre-wrap;
       word-break: break-word;
+      background-color: rgba(0, 0, 0, 0.6);
+      margin: 10px auto;
+      max-width: 1000px;
     }
-
-    #caption1 { bottom: 18%; }
-    #caption2 { bottom: 10%; }
 
     @media (max-width: 600px) {
       .caption {
-        font-size: 3.5vw;
+        font-size: 3vw;
       }
     }
 
     @media (min-width: 1200px) {
       .caption {
-        font-size: 1.8vw;
+        font-size: 1.1vw;
       }
-    }
-
-    #video-container:fullscreen .caption,
-    #video-container:-webkit-full-screen .caption,
-    #video-container:-moz-full-screen .caption {
-      display: block;
-      z-index: 10000;
     }
 
     #controls {
@@ -109,7 +103,7 @@
 </head>
 <body>
 
-  <h1>WebSRT test 1</h1>
+  <h1>WebSRT</h1>
   <p>Drag & drop one video file and two .srt files</p>
   <div id="drop-zone">Drop your video and subtitle files here</div>
 
@@ -127,9 +121,10 @@
 
   <div id="video-container">
     <video id="video" controls autoplay></video>
-    <div id="caption1" class="caption"></div>
-    <div id="caption2" class="caption"></div>
   </div>
+
+  <div id="caption1" class="caption"></div>
+  <div id="caption2" class="caption"></div>
 
   <script>
     const video = document.getElementById('video');
@@ -138,15 +133,23 @@
     const dropZone = document.getElementById('drop-zone');
     const toggleBtn = document.getElementById('toggleCaptionsBtn');
     const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const videoContainer = document.getElementById('video-container');
 
     let captionsVisible = true;
     let captions = [[], []];
 
-    dropZone.addEventListener('dragover', e => e.preventDefault());
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
 
     dropZone.addEventListener('drop', async e => {
       e.preventDefault();
+      dropZone.classList.remove('dragover');
+
       const files = [...e.dataTransfer.files];
       const videoFile = files.find(f => f.type.startsWith('video/'));
       const srtFiles = files.filter(f => f.name.endsWith('.srt'));
@@ -211,7 +214,7 @@
       if (document.fullscreenElement) {
         document.exitFullscreen();
       } else {
-        videoContainer.requestFullscreen();
+        document.documentElement.requestFullscreen();
       }
     }
 
