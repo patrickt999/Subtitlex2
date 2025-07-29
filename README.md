@@ -47,7 +47,7 @@ spacebar - play/pause
 
 I am hosting this at:
 
-https://patrickt999.github.io/WebSRT/
+https://patrickt999.github.io/Subtitlex2/
 
 You can host this on any static site hosting service:
 
