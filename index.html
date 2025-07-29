@@ -1,1 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WebSRT</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      color: white;
+      font-family: sans-serif;
+      height: 100%;
+      overflow: auto;
+    }
+
+    #header {
+      text-align: center;
+      padding: 10px;
+    }
+
+    #drop-zone {
+      border: 2px dashed #444;
+      padding: 10px;
+      margin: 10px auto;
+      color: #888;
+      width: 80%;
+      max-width: 800px;
+    }
+
+    #controls {
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 0 10px;
+      background: #222;
+      color: white;
+      border: 1px solid #555;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #444;
+    }
+
+    #video-container {
+      position: relative;
+      width: 80%;
+      max-width: 960px;
+      margin: 0 auto 40px;
+      background: black;
+    }
+
+    video {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: black;
+      z-index: 1;
+      position: relative;
+    }
+
+    .caption {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      text-align: center;
+      font-size: 2em;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      text-shadow: 2px 2px 4px #000;
+      z-index: 10000 !important;
+      pointer-events: none;
+      display: block !important;
+    }
+
+    #caption1 { bottom: 90px; }
+    #caption2 { bottom: 30px; }
+
+    :fullscreen .caption,
+    :-webkit-full-screen .caption {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      font-size: 2.5em;
+      z-index: 2147483647 !important;
+    }
+  </style>
+</head>
+<body tabindex="0">
+  <div id="header">
+    <h1>WebSRT</h1>
+    <div id="drop-zone">Drag & drop one video and two .srt files</div>
+    <p>Space = Play/Pause | C = Toggle Captions | F = Fullscreen | ← / → = Seek</p>
+  </div>
+
+  <div id="controls">
+    <button id="toggleCaptionsBtn">Hide Captions (C)</button>
+    <button id="fullscreenBtn">Fullscreen (F)</button>
+  </div>
+
+  <div id="video-container">
+    <video id="video" controls autoplay></video>
+    <div id="caption1" class="caption"></div>
+    <div id="caption2" class="caption"></div>
+  </div>
+
+  <script>
+    const video = document.getElementById("video");
+    const caption1 = document.getElementById("caption1");
+    const caption2 = document.getElementById("caption2");
+    const toggleBtn = document.getElementById("toggleCaptionsBtn");
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
+    const dropZone = document.getElementById("drop-zone");
+    const videoContainer = document.getElementById("video-container");
+
+    let captions = [[], []];
+    let captionsVisible = true;
+
+    function parseSRT(data) {
+      return data.split(/\r?\n\r?\n/).map(block => {
+        const lines = block.split(/\r?\n/);
+        const timeLine = lines.find(l => l.includes('-->'));
+        if (!timeLine) return null;
+        const [start, end] = timeLine.split(' --> ').map(parseTime);
+        const text = lines.slice(2).join("\n");
+        return { start, end, text };
+      }).filter(Boolean);
+    }
+
+    function parseTime(timeStr) {
+      const [h, m, s] = timeStr.split(':');
+      const [sec, ms] = s.split(',');
+      return (+h) * 3600 + (+m) * 60 + (+sec) + (+ms) / 1000;
+    }
+
+    function getCaption(track, time) {
+      if (!Array.isArray(track)) return '';
+      const entry = track.find(e => time >= e.start && time <= e.end);
+      return entry ? entry.text : '';
+    }
+
+    video.addEventListener("timeupdate", () => {
+      const t = video.currentTime;
+      const text1 = getCaption(captions[0], t);
+      const text2 = getCaption(captions[1], t);
+
+      if (!captionsVisible) {
+        caption1.textContent = '';
+        caption2.textContent = '';
+        return;
+      }
+
+      caption1.textContent = text1;
+      caption2.textContent = text2;
+    });
+
+    function toggleCaptions() {
+      captionsVisible = !captionsVisible;
+      caption1.style.display = captionsVisible ? 'block' : 'none';
+      caption2.style.display = captionsVisible ? 'block' : 'none';
+      toggleBtn.textContent = captionsVisible ? 'Hide Captions (C)' : 'Show Captions (C)';
+    }
+
+    function toggleFullscreen() {
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+      } else {
+        videoContainer.requestFullscreen?.() || videoContainer.webkitRequestFullscreen?.();
+      }
+    }
+
+    function togglePlayPause() {
+      video.paused ? video.play() : video.pause();
+    }
+
+    dropZone.addEventListener("dragover", e => e.preventDefault());
+    dropZone.addEventListener("drop", async e => {
+      e.preventDefault();
+      const files = [...e.dataTransfer.files];
+      const videoFile = files.find(f => f.type.startsWith("video/"));
+      const srtFiles = files.filter(f => f.name.endsWith(".srt"));
+
+      if (!videoFile) return alert("Drop a valid video file.");
+      if (srtFiles.length < 2) return alert("Drop at least two .srt files.");
+
+      video.src = URL.createObjectURL(videoFile);
+      video.load();
+      video.play();
+
+      const parsed = await Promise.all(srtFiles.slice(0, 2).map(async file => {
+        const text = await file.text();
+        return parseSRT(text);
+      }));
+
+      captions = parsed;
+    });
+
+    toggleBtn.addEventListener("click", toggleCaptions);
+    fullscreenBtn.addEventListener("click", toggleFullscreen);
+
+    document.addEventListener("keydown", e => {
+      if (["input", "textarea"].includes(e.target.tagName.toLowerCase())) return;
+
+      switch (e.key.toLowerCase()) {
+        case 'c': toggleCaptions(); break;
+        case 'f': toggleFullscreen(); break;
+        case ' ': e.preventDefault(); togglePlayPause(); break;
+        case 'arrowleft': video.currentTime = Math.max(0, video.currentTime - 5); break;
+        case 'arrowright': video.currentTime = Math.min(video.duration, video.currentTime + 5); break;
+      }
+    });
+
+    window.onload = () => document.body.focus();
+  </script>
+</body>
+</html>
 
