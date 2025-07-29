@@ -46,12 +46,21 @@
       background: #444;
     }
 
-    #video-container {
+    #player-wrapper {
       position: relative;
       width: 80%;
       max-width: 960px;
       margin: 0 auto 40px;
       background: black;
+      overflow: hidden;
+    }
+
+    video::-webkit-media-controls-fullscreen-button {
+      display: none !important;
+    }
+
+    video::-webkit-media-controls-enclosure {
+      overflow: hidden;
     }
 
     video {
@@ -60,7 +69,6 @@
       display: block;
       background: black;
       z-index: 1;
-      position: relative;
     }
 
     .caption {
@@ -69,29 +77,16 @@
       transform: translateX(-50%);
       width: 90%;
       text-align: center;
-      font-size: 2em;
-      background: rgba(0, 0, 0, 0.6);
+      font-size: clamp(1rem, 2vw, 2rem);
       color: white;
       padding: 6px 12px;
-      border-radius: 6px;
       text-shadow: 2px 2px 4px #000;
-      z-index: 10000 !important;
       pointer-events: none;
-      display: block !important;
+      z-index: 2;
     }
 
-    #caption1 { bottom: 90px; }
-    #caption2 { bottom: 30px; }
-
-    :fullscreen .caption,
-    :-webkit-full-screen .caption {
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100%;
-      font-size: 2.5em;
-      z-index: 2147483647 !important;
-    }
+    #caption1 { bottom: 100px; }
+    #caption2 { bottom: 50px; }
   </style>
 </head>
 <body tabindex="0">
@@ -106,7 +101,7 @@
     <button id="fullscreenBtn">Fullscreen (F)</button>
   </div>
 
-  <div id="video-container">
+  <div id="player-wrapper">
     <video id="video" controls autoplay></video>
     <div id="caption1" class="caption"></div>
     <div id="caption2" class="caption"></div>
@@ -114,23 +109,23 @@
 
   <script>
     const video = document.getElementById("video");
+    const wrapper = document.getElementById("player-wrapper");
     const caption1 = document.getElementById("caption1");
     const caption2 = document.getElementById("caption2");
     const toggleBtn = document.getElementById("toggleCaptionsBtn");
     const fullscreenBtn = document.getElementById("fullscreenBtn");
     const dropZone = document.getElementById("drop-zone");
-    const videoContainer = document.getElementById("video-container");
 
     let captions = [[], []];
     let captionsVisible = true;
 
     function parseSRT(data) {
       return data.split(/\r?\n\r?\n/).map(block => {
-        const lines = block.split(/\r?\n/);
+        const lines = block.split(/\r?\n/).filter(line => line.trim() !== '');
         const timeLine = lines.find(l => l.includes('-->'));
         if (!timeLine) return null;
         const [start, end] = timeLine.split(' --> ').map(parseTime);
-        const text = lines.slice(2).join("\n");
+        const text = lines.slice(lines.indexOf(timeLine) + 1).join("\n").trim();
         return { start, end, text };
       }).filter(Boolean);
     }
@@ -142,38 +137,28 @@
     }
 
     function getCaption(track, time) {
-      if (!Array.isArray(track)) return '';
-      const entry = track.find(e => time >= e.start && time <= e.end);
-      return entry ? entry.text : '';
+      return track.find(e => time >= e.start && time < e.end)?.text || '';
     }
 
-    video.addEventListener("timeupdate", () => {
+    function updateCaptions() {
       const t = video.currentTime;
-      const text1 = getCaption(captions[0], t);
-      const text2 = getCaption(captions[1], t);
+      caption1.textContent = captionsVisible ? getCaption(captions[0], t) : '';
+      caption2.textContent = captionsVisible ? getCaption(captions[1], t) : '';
+    }
 
-      if (!captionsVisible) {
-        caption1.textContent = '';
-        caption2.textContent = '';
-        return;
-      }
-
-      caption1.textContent = text1;
-      caption2.textContent = text2;
-    });
+    video.addEventListener("timeupdate", updateCaptions);
 
     function toggleCaptions() {
       captionsVisible = !captionsVisible;
-      caption1.style.display = captionsVisible ? 'block' : 'none';
-      caption2.style.display = captionsVisible ? 'block' : 'none';
       toggleBtn.textContent = captionsVisible ? 'Hide Captions (C)' : 'Show Captions (C)';
+      updateCaptions();
     }
 
     function toggleFullscreen() {
-      if (document.fullscreenElement || document.webkitFullscreenElement) {
-        document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+      if (!document.fullscreenElement) {
+        wrapper.requestFullscreen();
       } else {
-        videoContainer.requestFullscreen?.() || videoContainer.webkitRequestFullscreen?.();
+        document.exitFullscreen();
       }
     }
 
@@ -181,12 +166,57 @@
       video.paused ? video.play() : video.pause();
     }
 
+    function handleKeyboardShortcuts(e) {
+      if (["input", "textarea"].includes(e.target.tagName.toLowerCase())) return;
+
+      switch (e.key.toLowerCase()) {
+        case 'c':
+          e.preventDefault();
+          toggleCaptions();
+          break;
+        case 'f':
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+        case ' ':
+          e.preventDefault();
+          togglePlayPause();
+          break;
+        case 'arrowleft':
+          e.preventDefault();
+          video.currentTime = Math.max(0, video.currentTime - 5);
+          break;
+        case 'arrowright':
+          e.preventDefault();
+          video.currentTime = Math.min(video.duration, video.currentTime + 5);
+          break;
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyboardShortcuts);
+
+    function restoreKeyboardFocus() {
+      setTimeout(() => document.body.focus(), 100);
+    }
+
+    document.addEventListener("fullscreenchange", restoreKeyboardFocus);
+    document.addEventListener("webkitfullscreenchange", restoreKeyboardFocus);
+    document.addEventListener("mozfullscreenchange", restoreKeyboardFocus);
+    document.addEventListener("MSFullscreenChange", restoreKeyboardFocus);
+
+    window.onload = () => {
+      document.body.focus();
+      if (video.readyState >= 2) updateCaptions();
+      else video.addEventListener('loadedmetadata', updateCaptions, { once: true });
+    };
+
     dropZone.addEventListener("dragover", e => e.preventDefault());
+
     dropZone.addEventListener("drop", async e => {
       e.preventDefault();
       const files = [...e.dataTransfer.files];
       const videoFile = files.find(f => f.type.startsWith("video/"));
-      const srtFiles = files.filter(f => f.name.endsWith(".srt"));
+      const srtFiles = files.filter(f => f.name.endsWith(".srt")).sort((a, b) => a.name.localeCompare(b.name));
 
       if (!videoFile) return alert("Drop a valid video file.");
       if (srtFiles.length < 2) return alert("Drop at least two .srt files.");
@@ -195,31 +225,12 @@
       video.load();
       video.play();
 
-      const parsed = await Promise.all(srtFiles.slice(0, 2).map(async file => {
-        const text = await file.text();
-        return parseSRT(text);
-      }));
-
-      captions = parsed;
+      captions = await Promise.all(srtFiles.slice(0, 2).map(async file => parseSRT(await file.text())));
+      updateCaptions();
     });
 
-    toggleBtn.addEventListener("click", toggleCaptions);
     fullscreenBtn.addEventListener("click", toggleFullscreen);
-
-    document.addEventListener("keydown", e => {
-      if (["input", "textarea"].includes(e.target.tagName.toLowerCase())) return;
-
-      switch (e.key.toLowerCase()) {
-        case 'c': toggleCaptions(); break;
-        case 'f': toggleFullscreen(); break;
-        case ' ': e.preventDefault(); togglePlayPause(); break;
-        case 'arrowleft': video.currentTime = Math.max(0, video.currentTime - 5); break;
-        case 'arrowright': video.currentTime = Math.min(video.duration, video.currentTime + 5); break;
-      }
-    });
-
-    window.onload = () => document.body.focus();
+    toggleBtn.addEventListener("click", toggleCaptions);
   </script>
 </body>
 </html>
-
