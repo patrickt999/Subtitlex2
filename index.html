@@ -12,73 +12,93 @@
       font-family: sans-serif;
       height: 100%;
     }
-
-    #drop-zone {
-      border: 2px dashed #444;
-      padding: 30px;
-      margin: 20px auto;
-      width: 98%;
-      max-width: 1200px;
-      color: #888;
-      text-align: center;
-      box-sizing: border-box;
-    }
-
     #video-container {
       position: relative;
       width: 80%;
       max-width: 1000px;
       margin: 40px auto;
     }
-
-    /* Ensures fullscreen mode keeps the captions positioned properly */
     #video-container:fullscreen,
     #video-container:-webkit-full-screen,
     #video-container:-moz-full-screen {
-      height: 100%;
+      width: 100vw;
+      height: 100vh;
+      max-width: none;
+      max-height: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background: #000;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-
+    #video-container:fullscreen video,
+    #video-container:-webkit-full-screen video,
+    #video-container:-moz-full-screen video {
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
+      background: #000;
+    }
+    #video-container:fullscreen .caption,
+    #video-container:-webkit-full-screen .caption,
+    #video-container:-moz-full-screen .caption {
+      position: fixed;
+      font-size: 2.5vw;
+      width: 100vw;
+      left: 0;
+      right: 0;
+      pointer-events: none;
+      z-index: 2147483647; /* Maximum z-index */
+    }
+    #video-container:fullscreen #caption1,
+    #video-container:-webkit-full-screen #caption1,
+    #video-container:-moz-full-screen #caption1 {
+      bottom: 120px;
+    }
+    #video-container:fullscreen #caption2,
+    #video-container:-webkit-full-screen #caption2,
+    #video-container:-moz-full-screen #caption2 {
+      bottom: 60px;
+    }
     video {
       width: 100%;
       height: auto;
       display: block;
       background: #000;
     }
-
     .caption {
       position: absolute;
       width: 100%;
       text-align: center;
       font-size: 1.8vw;
       color: white;
-      text-shadow: 2px 2px 4px #000;
+      text-shadow: 2px 2px 4px #000, -1px -1px 2px #000, 1px -1px 2px #000, -1px 1px 2px #000;
       line-height: 1.5;
       padding: 0 1em;
       pointer-events: none;
       z-index: 10;
       white-space: pre-wrap;
+      font-weight: bold;
     }
-
     #caption1 { bottom: 80px; }
     #caption2 { bottom: 40px; }
-
     @media (max-width: 600px) {
       .caption {
         font-size: 3.2vw;
       }
     }
-
     @media (min-width: 1200px) {
       .caption {
         font-size: 1.2vw;
       }
     }
-
     #controls {
       text-align: center;
       margin-top: 20px;
     }
-
     button {
       padding: 10px 20px;
       font-size: 1em;
@@ -88,15 +108,12 @@
       cursor: pointer;
       margin: 0 10px;
     }
-
     button:hover {
       background: #444;
     }
-
     h1, p, ul {
       text-align: center;
     }
-
     ul {
       list-style: none;
       padding: 0;
@@ -105,66 +122,53 @@
   </style>
 </head>
 <body>
-
   <h1>WebSRT</h1>
-  <p>drag & drop one video file and two .srt files</p>
-  <div id="drop-zone">drag & drop three files here</div>
-
   <ul>
     <li>Spacebar: Play/Pause</li>
-    <li>C: Hide/Show Captions</li>
+    <li>C: Toggle Captions</li>
     <li>F: Fullscreen</li>
     <li>←/→: Seek</li>
   </ul>
-
   <div id="controls">
     <button id="toggleCaptionsBtn">Hide Captions (C)</button>
     <button id="fullscreenBtn">Fullscreen (F)</button>
   </div>
-
   <div id="video-container">
     <video id="video" controls autoplay></video>
     <div id="caption1" class="caption"></div>
     <div id="caption2" class="caption"></div>
   </div>
-
   <script>
+    // Hardcoded file names based on your folder
+    const videoFile = "Narcos S01E01 WEBRip 720p x265 AAC E-Subs [GWC].mkv";
+    const srtFiles = ["Narcos.S01E01-en.srt", "Narcos.S01E01-es.srt"];
     const video = document.getElementById('video');
     const caption1 = document.getElementById('caption1');
     const caption2 = document.getElementById('caption2');
-    const dropZone = document.getElementById('drop-zone');
     const toggleBtn = document.getElementById('toggleCaptionsBtn');
     const fullscreenBtn = document.getElementById('fullscreenBtn');
     const videoContainer = document.getElementById('video-container');
-
     let captions = [[], []];
     let captionsVisible = true;
-
-    dropZone.addEventListener('dragover', e => e.preventDefault());
-
-    dropZone.addEventListener('drop', async e => {
-      e.preventDefault();
-      const files = [...e.dataTransfer.files];
-      const videoFile = files.find(f => f.type.startsWith('video/'));
-      const srtFiles = files.filter(f => f.name.endsWith('.srt'));
-
-      if (!videoFile || srtFiles.length < 2) {
-        alert('Please drop 1 video file and 2 .srt files.');
-        return;
-      }
-
-      video.src = URL.createObjectURL(videoFile);
+    
+    // Load video and subtitles automatically
+    function fetchTextFile(path) {
+      return fetch(path).then(r => r.text());
+    }
+    
+    async function loadMedia() {
+      // Set video source
+      video.src = videoFile;
       video.load();
       video.play();
-
-      const parsed = await Promise.all(srtFiles.slice(0, 2).map(async file => {
-        const text = await file.text();
+      // Load and parse SRTs
+      const parsed = await Promise.all(srtFiles.map(async file => {
+        const text = await fetchTextFile(file);
         return parseSRT(text);
       }));
-
       captions = parsed;
-    });
-
+    }
+    
     function parseSRT(text) {
       return text.split(/\r?\n\r?\n/).map(block => {
         const lines = block.split(/\r?\n/);
@@ -175,36 +179,40 @@
         return { start, end, text: content };
       }).filter(Boolean);
     }
-
+    
     function parseTime(t) {
       const [h, m, s] = t.split(':');
       const [sec, ms] = s.split(',');
       return (+h) * 3600 + (+m) * 60 + (+sec) + (+ms) / 1000;
     }
-
+    
     function getCaption(track, time) {
       const entry = track.find(e => time >= e.start && time <= e.end);
       return entry ? entry.text : '';
     }
-
-    video.addEventListener('timeupdate', () => {
+    
+    function updateCaptions() {
       if (!captionsVisible) {
         caption1.textContent = '';
         caption2.textContent = '';
         return;
       }
       const t = video.currentTime;
-      caption1.textContent = getCaption(captions[0], t);
-      caption2.textContent = getCaption(captions[1], t);
-    });
-
+      const text1 = getCaption(captions[0], t);
+      const text2 = getCaption(captions[1], t);
+      caption1.textContent = text1;
+      caption2.textContent = text2;
+    }
+    
+    video.addEventListener('timeupdate', updateCaptions);
+    
     function toggleCaptions() {
       captionsVisible = !captionsVisible;
       caption1.textContent = '';
       caption2.textContent = '';
       toggleBtn.textContent = captionsVisible ? 'Hide Captions (C)' : 'Show Captions (C)';
     }
-
+    
     function toggleFullscreen() {
       if (document.fullscreenElement) {
         document.exitFullscreen();
@@ -212,14 +220,24 @@
         videoContainer.requestFullscreen();
       }
     }
-
+    
+    function handleFullscreenChange() {
+      // Force caption update when fullscreen state changes
+      setTimeout(updateCaptions, 100);
+    }
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    
     function togglePlayPause() {
       video.paused ? video.play() : video.pause();
     }
-
+    
     toggleBtn.addEventListener('click', toggleCaptions);
     fullscreenBtn.addEventListener('click', toggleFullscreen);
-
+    
     document.addEventListener('keydown', e => {
       if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'textarea') return;
       if (e.key === 'c' || e.key === 'C') toggleCaptions();
@@ -231,6 +249,9 @@
       if (e.key === 'ArrowLeft') video.currentTime -= 5;
       if (e.key === 'ArrowRight') video.currentTime += 5;
     });
+    
+    // Load everything on page load
+    loadMedia();
   </script>
 </body>
 </html>
