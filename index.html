@@ -93,7 +93,7 @@
   <div id="header">
     <h1>WebSRT</h1>
     <div id="drop-zone">Drag & drop one video and two .srt files</div>
-    <p>Space = Play/Pause | C = Toggle Captions | F = Fullscreen | ← / → = Seek</p>
+    <p>spacebar = Play/Pause | C = Hide/Show Captions | F = Fullscreen | ← / → = Seek </p>
   </div>
 
   <div id="controls">
@@ -167,6 +167,7 @@
     }
 
     function handleKeyboardShortcuts(e) {
+      // Skip if typing in input fields
       if (["input", "textarea"].includes(e.target.tagName.toLowerCase())) return;
 
       switch (e.key.toLowerCase()) {
@@ -188,24 +189,77 @@
           break;
         case 'arrowright':
           e.preventDefault();
-          video.currentTime = Math.min(video.duration, video.currentTime + 5);
+          video.currentTime = Math.min(video.duration || 0, video.currentTime + 5);
+          break;
+        case 'escape':
+          if (document.fullscreenElement) {
+            e.preventDefault();
+            document.exitFullscreen();
+          }
           break;
       }
     }
 
+    // Add keyboard shortcuts to both document and video element
     document.addEventListener("keydown", handleKeyboardShortcuts);
+    video.addEventListener("keydown", handleKeyboardShortcuts);
 
     function restoreKeyboardFocus() {
-      setTimeout(() => document.body.focus(), 100);
+      // Ensure body can receive keyboard events
+      setTimeout(() => {
+        document.body.focus();
+        document.body.tabIndex = 0;
+      }, 100);
     }
 
+    // Handle fullscreen changes
     document.addEventListener("fullscreenchange", restoreKeyboardFocus);
     document.addEventListener("webkitfullscreenchange", restoreKeyboardFocus);
     document.addEventListener("mozfullscreenchange", restoreKeyboardFocus);
     document.addEventListener("MSFullscreenChange", restoreKeyboardFocus);
 
+    // Ensure shortcuts work when interacting with video
+    video.addEventListener("click", () => {
+      setTimeout(() => document.body.focus(), 10);
+    });
+
+    // Restore focus after progress bar clicks
+    video.addEventListener("seeked", () => {
+      setTimeout(() => document.body.focus(), 10);
+    });
+
+    // Restore focus after any video interaction
+    video.addEventListener("play", () => {
+      setTimeout(() => document.body.focus(), 10);
+    });
+
+    video.addEventListener("pause", () => {
+      setTimeout(() => document.body.focus(), 10);
+    });
+
+    // Restore focus when video controls lose focus
+    video.addEventListener("blur", () => {
+      setTimeout(() => document.body.focus(), 10);
+    });
+
+    // Restore focus after any mouse interaction with video
+    video.addEventListener("mouseup", () => {
+      setTimeout(() => document.body.focus(), 10);
+    });
+
+    // Backup: Continuously ensure body can receive keyboard events
+    setInterval(() => {
+      if (document.activeElement === video) {
+        document.body.focus();
+      }
+    }, 100);
+
     window.onload = () => {
+      // Ensure body can receive keyboard events
+      document.body.tabIndex = 0;
       document.body.focus();
+
+      // Initialize captions
       if (video.readyState >= 2) updateCaptions();
       else video.addEventListener('loadedmetadata', updateCaptions, { once: true });
     };
