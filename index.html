@@ -11,31 +11,31 @@
       color: #fff;
       font-family: sans-serif;
       height: 100%;
-      overflow: auto;
     }
 
     #drop-zone {
-      border: 2px dashed #666;
+      border: 2px dashed #444;
       padding: 30px;
       margin: 20px auto;
-      width: 95%;
+      width: 98%;
       max-width: 1200px;
-      color: #999;
+      color: #888;
       text-align: center;
       box-sizing: border-box;
-      transition: background 0.3s, border-color 0.3s;
-    }
-
-    #drop-zone.dragover {
-      background: #0f0;
-      border-color: #0f0;
-      color: #000;
     }
 
     #video-container {
+      position: relative;
       width: 80%;
       max-width: 1000px;
-      margin: 40px auto 10px;
+      margin: 40px auto;
+    }
+
+    /* Ensures fullscreen mode keeps the captions positioned properly */
+    #video-container:fullscreen,
+    #video-container:-webkit-full-screen,
+    #video-container:-moz-full-screen {
+      height: 100%;
     }
 
     video {
@@ -46,28 +46,31 @@
     }
 
     .caption {
+      position: absolute;
+      width: 100%;
       text-align: center;
-      font-size: 1.2vw;
+      font-size: 1.8vw;
       color: white;
       text-shadow: 2px 2px 4px #000;
-      line-height: 1.4;
-      padding: 10px 2vw;
+      line-height: 1.5;
+      padding: 0 1em;
+      pointer-events: none;
+      z-index: 10;
       white-space: pre-wrap;
-      word-break: break-word;
-      background-color: rgba(0, 0, 0, 0.6);
-      margin: 10px auto;
-      max-width: 1000px;
     }
+
+    #caption1 { bottom: 80px; }
+    #caption2 { bottom: 40px; }
 
     @media (max-width: 600px) {
       .caption {
-        font-size: 3vw;
+        font-size: 3.2vw;
       }
     }
 
     @media (min-width: 1200px) {
       .caption {
-        font-size: 1.1vw;
+        font-size: 1.2vw;
       }
     }
 
@@ -104,12 +107,12 @@
 <body>
 
   <h1>WebSRT</h1>
-  <p>Drag & drop one video file and two .srt files</p>
-  <div id="drop-zone">Drop your video and subtitle files here</div>
+  <p>drag & drop one video file and two .srt files</p>
+  <div id="drop-zone">drag & drop three files here</div>
 
   <ul>
     <li>Spacebar: Play/Pause</li>
-    <li>C: Toggle Captions</li>
+    <li>C: Hide/Show Captions</li>
     <li>F: Fullscreen</li>
     <li>←/→: Seek</li>
   </ul>
@@ -121,10 +124,9 @@
 
   <div id="video-container">
     <video id="video" controls autoplay></video>
+    <div id="caption1" class="caption"></div>
+    <div id="caption2" class="caption"></div>
   </div>
-
-  <div id="caption1" class="caption"></div>
-  <div id="caption2" class="caption"></div>
 
   <script>
     const video = document.getElementById('video');
@@ -133,23 +135,15 @@
     const dropZone = document.getElementById('drop-zone');
     const toggleBtn = document.getElementById('toggleCaptionsBtn');
     const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const videoContainer = document.getElementById('video-container');
 
-    let captionsVisible = true;
     let captions = [[], []];
+    let captionsVisible = true;
 
-    dropZone.addEventListener('dragover', e => {
-      e.preventDefault();
-      dropZone.classList.add('dragover');
-    });
-
-    dropZone.addEventListener('dragleave', () => {
-      dropZone.classList.remove('dragover');
-    });
+    dropZone.addEventListener('dragover', e => e.preventDefault());
 
     dropZone.addEventListener('drop', async e => {
       e.preventDefault();
-      dropZone.classList.remove('dragover');
-
       const files = [...e.dataTransfer.files];
       const videoFile = files.find(f => f.type.startsWith('video/'));
       const srtFiles = files.filter(f => f.name.endsWith('.srt'));
@@ -160,14 +154,15 @@
       }
 
       video.src = URL.createObjectURL(videoFile);
+      video.load();
       video.play();
 
-      const results = await Promise.all(srtFiles.slice(0, 2).map(async file => {
+      const parsed = await Promise.all(srtFiles.slice(0, 2).map(async file => {
         const text = await file.text();
         return parseSRT(text);
       }));
 
-      captions = results;
+      captions = parsed;
     });
 
     function parseSRT(text) {
@@ -214,7 +209,7 @@
       if (document.fullscreenElement) {
         document.exitFullscreen();
       } else {
-        document.documentElement.requestFullscreen();
+        videoContainer.requestFullscreen();
       }
     }
 
